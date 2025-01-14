@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { addDoc, doc, getDoc, collection } from "firebase/firestore";
 
 import { db } from "./src/firebaseConnection";
 
 export default function App() {
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     async function getData() {
@@ -14,38 +20,40 @@ export default function App() {
 
       getDoc(docRef)
         .then((response) => {
-          setName(response.data()?.name);
           console.log("rs ", response.data());
-          setLoading(false);
         })
         .catch((err: any) => {
-          setLoading(false);
           console.error("error", err);
         });
-
-      //onSnapshot(doc(db, "users", "1"), (doc) => {
-      //  setName(doc.data()?.name);
-      //});
     }
 
     getData();
   }, []);
 
   const handleAdd = async () => {
-    //await setDoc(doc(db, "users", "3"), {
-    //  name: "Master",
-    //  username: "masterOfPuppets",
-    //});
-
     await addDoc(collection(db, "users"), {
-      name: "Novo",
-      username: "fulaninho",
+      name,
+      username,
     });
   };
 
   return (
     <View style={styles.container}>
-      {loading ? <Text>Carregando...</Text> : <Text>Nome: {name}</Text>}
+      <Text style={styles.label}>Nome: </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Informe o nome"
+        value={name}
+        onChangeText={(text) => setName(text)}
+      />
+
+      <Text style={styles.label}>Username: </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Informe o username"
+        value={username}
+        onChangeText={(text) => setUsername(text)}
+      />
 
       <TouchableOpacity style={styles.button} onPress={handleAdd}>
         <Text style={styles.buttonText}>Adicionar</Text>
@@ -57,16 +65,30 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 40,
     backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
   },
   button: {
     backgroundColor: "#000",
-    alignSelf: "center",
+    marginHorizontal: 8,
+    borderRadius: 6,
   },
   buttonText: {
     padding: 8,
     color: "#fff",
+    textAlign: "center",
+  },
+  label: {
+    color: "#000",
+    fontSize: 18,
+    marginBottom: 4,
+    marginLeft: 8,
+  },
+  input: {
+    borderWidth: 1,
+    marginLeft: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    borderRadius: 6,
   },
 });
