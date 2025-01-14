@@ -34,6 +34,9 @@ export default function App() {
     await addDoc(collection(db, "users"), {
       name,
       username,
+    }).then(() => {
+      setName("");
+      setUsername("");
     });
   };
 
