@@ -5,26 +5,36 @@ import {
   View,
   TouchableOpacity,
   TextInput,
+  FlatList,
 } from "react-native";
-import { addDoc, doc, getDoc, collection } from "firebase/firestore";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 
 import { db } from "./src/firebaseConnection";
+import UsersList from "./src/components/Users";
 
 export default function App() {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     async function getData() {
-      const docRef = doc(db, "users", "1");
+      const usersRef = collection(db, "users");
 
-      getDoc(docRef)
-        .then((response) => {
-          console.log("rs ", response.data());
-        })
-        .catch((err: any) => {
-          console.error("error", err);
+      getDocs(usersRef).then((result) => {
+        let list: any[] = [];
+
+        result.forEach((doc) => {
+          list.push({
+            id: doc.id,
+            name: doc.data().name,
+            username: doc.data().username,
+          });
         });
+        setUsers(list);
+        setLoading(false);
+      });
     }
 
     getData();
@@ -34,10 +44,14 @@ export default function App() {
     await addDoc(collection(db, "users"), {
       name,
       username,
-    }).then(() => {
-      setName("");
-      setUsername("");
-    });
+    })
+      .then(() => {
+        setName("");
+        setUsername("");
+      })
+      .catch((err: any) => {
+        console.error("error ", err);
+      });
   };
 
   return (
@@ -61,6 +75,18 @@ export default function App() {
       <TouchableOpacity style={styles.button} onPress={handleAdd}>
         <Text style={styles.buttonText}>Adicionar</Text>
       </TouchableOpacity>
+      <View style={styles.listContainer}>
+        {loading ? (
+          <Text>Carregando...</Text>
+        ) : (
+          <FlatList
+            style={styles.list}
+            data={users}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => <UsersList data={item} />}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -93,5 +119,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
     borderRadius: 6,
+  },
+  list: {},
+  listContainer: {
+    marginHorizontal: 8,
+    marginTop: 14,
   },
 });
